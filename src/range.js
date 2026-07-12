@@ -157,7 +157,7 @@ class Range {
   Section: Serialization and Deserialization
   */
 
-  // Public: Returns a plain javascript object representation of the range.
+  // Public: Returns a plain JavaScript object representation of the range.
   serialize() {
     return [this.start.serialize(), this.end.serialize()];
   }
@@ -246,7 +246,7 @@ class Range {
 
   // Public: Compare two Ranges
   //
-  // * `otherRange` A {Range} or range-compatible {Array}.
+  // * `other` A {Range} or range-compatible {Array}.
   //
   // Returns `-1` if this range starts before the argument or contains it.
   // Returns `0` if this range is equivalent to the argument.
@@ -264,7 +264,7 @@ class Range {
   // Public: Returns a {Boolean} indicating whether this range has the same start
   // and end points as the given {Range} or range-compatible {Array}.
   //
-  // * `otherRange` A {Range} or range-compatible {Array}.
+  // * `other` A {Range} or range-compatible {Array}.
   isEqual(other) {
     if (other == null) { return false; }
     other = this.constructor.fromObject(other);
@@ -274,7 +274,7 @@ class Range {
   // Public: Returns a {Boolean} indicating whether this range starts and ends on
   // the same row as the argument.
   //
-  // * `otherRange` A {Range} or range-compatible {Array}.
+  // * `other` A {Range} or range-compatible {Array}.
   coversSameRows(other) {
     return (this.start.row === other.start.row) && (this.end.row === other.end.row);
   }

@@ -26,7 +26,7 @@ const Grim = require('grim')
 // {::onDidStopChanging}, and {::getChangesSinceCheckpoint}. These methods report
 // aggregated buffer updates as arrays of change objects containing the following
 // fields: `oldRange`, `newRange`, `oldText`, and `newText`. The `oldText`,
-// `newText`, and `newRange` fields are self-explanatory, but the interepretation
+// `newText`, and `newRange` fields are self-explanatory, but the interpretation
 // of `oldRange` is more nuanced:
 //
 // The reported `oldRange` is the range of the replaced text in the original
@@ -865,7 +865,7 @@ class TextBuffer {
   // Public: Set the text in the given range.
   //
   // * `range` A {Range}
-  // * `text` A {String}
+  // * `newText` A {String}
   // * `options` (optional) {Object}
   //   * `normalizeLineEndings` (optional) {Boolean} (default: true)
   //   * `undo` (optional) *Deprecated* {String} 'skip' will cause this change
@@ -931,7 +931,7 @@ class TextBuffer {
 
   // Public: Append text to the end of the buffer.
   //
-  // * `text` A {String} representing the text text to append.
+  // * `text` A {String} representing the text to append.
   // * `options` (optional) {Object}
   //   * `normalizeLineEndings` (optional) {Boolean} (default: true)
   //   * `undo` (optional) *Deprecated* {String} 'skip' will skip the undo
@@ -1073,7 +1073,7 @@ class TextBuffer {
 
   // Public: Create a layer to contain a set of related markers.
   //
-  // * `options` (optional) An {Object} contaning the following keys:
+  // * `options` (optional) An {Object} containing the following keys:
   //   * `maintainHistory` (optional) A {Boolean} indicating whether or not the
   //     state of this layer should be restored on undo/redo operations. Defaults
   //     to `false`.
@@ -1139,7 +1139,7 @@ class TextBuffer {
   //   * `exclusive` (optional) {Boolean} indicating whether insertions at the
   //     start or end of the marked range should be interpreted as happening
   //     *outside* the marker. Defaults to `false`, except when using the
-  //     `inside` invalidation strategy or when when the marker has no tail, in
+  //     `inside` invalidation strategy or when the marker has no tail, in
   //     which case it defaults to true. Explicitly assigning this option
   //     overrides behavior in all circumstances.
   //
@@ -1170,7 +1170,7 @@ class TextBuffer {
   //   * `exclusive` (optional) {Boolean} indicating whether insertions at the
   //     start or end of the marked range should be interpreted as happening
   //     *outside* the marker. Defaults to `false`, except when using the
-  //     `inside` invalidation strategy or when when the marker has no tail, in
+  //     `inside` invalidation strategy or when the marker has no tail, in
   //     which case it defaults to true. Explicitly assigning this option
   //     overrides behavior in all circumstances.
   //
@@ -2102,7 +2102,7 @@ class TextBuffer {
   // * `callback` - A {Function} to call when the language mode changes.
   //   * `languageMode` - The buffer's new language mode {Object}. See {TextBuffer::setLanguageMode}
   //     for its interface.
-  //   * `oldlanguageMode` - The buffer's old language mode {Object}. See {TextBuffer::setLanguageMode}
+  //   * `oldLanguageMode` - The buffer's old language mode {Object}. See {TextBuffer::setLanguageMode}
   //     for its interface.
   //
   // Returns a {Disposable} that can be used to stop the callback from being called.

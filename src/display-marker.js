@@ -78,9 +78,9 @@ class DisplayMarker {
   // be merged with this marker's selection, and a `null` value will be
   // returned.
   //
-  // * `properties` (optional) {Object} properties to associate with the new
+  // * `params` (optional) {Object} properties to associate with the new
   // marker. The new marker's properties are computed by extending this marker's
-  // properties with `properties`.
+  // properties with `params`.
   //
   // Returns a {DisplayMarker}.
   copy(params) {

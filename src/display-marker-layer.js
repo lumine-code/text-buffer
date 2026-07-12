@@ -115,7 +115,7 @@ class DisplayMarkerLayer {
 
   // Public: Create a marker with the given screen range.
   //
-  // * `range` A {Range} or range-compatible {Array}
+  // * `screenRange` A {Range} or range-compatible {Array}
   // * `options` A hash of key-value pairs to associate with the marker. There
   //   are also reserved property names that have marker-specific meaning.
   //   * `reversed` (optional) {Boolean} Creates the marker in a reversed
@@ -137,7 +137,7 @@ class DisplayMarkerLayer {
   //   * `exclusive` {Boolean} indicating whether insertions at the start or end
   //     of the marked range should be interpreted as happening *outside* the
   //     marker. Defaults to `false`, except when using the `inside`
-  //     invalidation strategy or when when the marker has no tail, in which
+  //     invalidation strategy or when the marker has no tail, in which
   //     case it defaults to true. Explicitly assigning this option overrides
   //     behavior in all circumstances.
   //   * `clipDirection` {String} If `'backward'`, returns the first valid
@@ -175,7 +175,7 @@ class DisplayMarkerLayer {
   //   * `exclusive` {Boolean} indicating whether insertions at the start or end
   //     of the marked range should be interpreted as happening *outside* the
   //     marker. Defaults to `false`, except when using the `inside`
-  //     invalidation strategy or when when the marker has no tail, in which
+  //     invalidation strategy or when the marker has no tail, in which
   //     case it defaults to true. Explicitly assigning this option overrides
   //     behavior in all circumstances.
   //   * `clipDirection` {String} If `'backward'`, returns the first valid
@@ -195,7 +195,7 @@ class DisplayMarkerLayer {
 
   // Public: Create a marker with the given buffer range.
   //
-  // * `range` A {Range} or range-compatible {Array}
+  // * `bufferRange` A {Range} or range-compatible {Array}
   // * `options` A hash of key-value pairs to associate with the marker. There
   //   are also reserved property names that have marker-specific meaning.
   //   * `reversed` (optional) {Boolean} Creates the marker in a reversed
@@ -217,7 +217,7 @@ class DisplayMarkerLayer {
   //   * `exclusive` {Boolean} indicating whether insertions at the start or end
   //     of the marked range should be interpreted as happening *outside* the
   //     marker. Defaults to `false`, except when using the `inside`
-  //     invalidation strategy or when when the marker has no tail, in which
+  //     invalidation strategy or when the marker has no tail, in which
   //     case it defaults to true. Explicitly assigning this option overrides
   //     behavior in all circumstances.
   //
@@ -251,7 +251,7 @@ class DisplayMarkerLayer {
   //   * `exclusive` {Boolean} indicating whether insertions at the start or end
   //     of the marked range should be interpreted as happening *outside* the
   //     marker. Defaults to `false`, except when using the `inside`
-  //     invalidation strategy or when when the marker has no tail, in which
+  //     invalidation strategy or when the marker has no tail, in which
   //     case it defaults to true. Explicitly assigning this option overrides
   //     behavior in all circumstances.
   //
@@ -304,7 +304,7 @@ class DisplayMarkerLayer {
   // In addition, there are several special properties that will be compared
   // with the range of the markers rather than their properties.
   //
-  // * `properties` An {Object} containing properties that each returned marker
+  // * `params` An {Object} containing properties that each returned marker
   //   must satisfy. Markers can be associated with custom properties, which are
   //   compared with basic equality. In addition, several reserved properties
   //   can be used to filter markers based on their current range:

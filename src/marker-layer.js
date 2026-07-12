@@ -252,7 +252,7 @@ class MarkerLayer {
   //   * `exclusive` {Boolean} indicating whether insertions at the start or end
   //     of the marked range should be interpreted as happening *outside* the
   //     marker. Defaults to `false`, except when using the `inside`
-  //     invalidation strategy or when when the marker has no tail, in which
+  //     invalidation strategy or when the marker has no tail, in which
   //     case it defaults to true. Explicitly assigning this option overrides
   //     behavior in all circumstances.
 
@@ -282,7 +282,7 @@ class MarkerLayer {
   //   * `exclusive` {Boolean} indicating whether insertions at the start or end
   //     of the marked range should be interpreted as happening *outside* the
   //     marker. Defaults to `false`, except when using the `inside`
-  //     invalidation strategy or when when the marker has no tail, in which
+  //     invalidation strategy or when the marker has no tail, in which
   //     case it defaults to true. Explicitly assigning this option overrides
   //     behavior in all circumstances.
 
