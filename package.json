@@ -32,8 +32,8 @@
     "yargs": "^6.5.0"
   },
   "dependencies": {
-    "@pulsar-edit/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#7445539",
-    "@pulsar-edit/superstring": "https://github.com/lumine-code/superstring.git#24d41fc",
+    "@pulsar-edit/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#74455395539148bf35a19212c8f1af65366358f9",
+    "@pulsar-edit/superstring": "https://github.com/lumine-code/superstring.git#24d41fc832e04c939a0d55feaef246e1b7e80083",
     "delegato": "^1.0.0",
     "diff": "^2.2.1",
     "event-kit": "^2.4.0",
