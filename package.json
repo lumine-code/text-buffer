@@ -1,7 +1,8 @@
 {
   "name": "@lumine-code/text-buffer",
+  "author": "lumine-code",
   "version": "16.0.0",
-  "description": "A container for large mutable strings with annotated regions",
+  "description": "Provides Lumine's mutable text buffer and marker model as a headless module.",
   "main": "./src/text-buffer",
   "scripts": {
     "prepublish": "npm run clean",
@@ -10,15 +11,13 @@
     "ci": "npm run test && npm run bench",
     "bench": "node benchmarks/index"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lumine-code/text-buffer.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lumine-code/text-buffer/issues"
-  },
+  "repository": "https://github.com/lumine-code/text-buffer",
+  "bugs": "https://github.com/lumine-code/text-buffer/issues",
   "atomTestRunner": "atom-jasmine2-test-runner",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "atom-jasmine2-test-runner": "^1.0.0",
     "dedent": "^0.6.0",
