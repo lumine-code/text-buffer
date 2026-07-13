@@ -5,3 +5,5 @@ script
 npm-debug.log
 .travis.yml
 .pairs
+/.github/
+**/.github/
