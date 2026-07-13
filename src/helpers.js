@@ -1,4 +1,4 @@
-const {Patch} = require('@pulsar-edit/superstring')
+const {Patch} = require('@lumine-code/superstring')
 const Range = require('./range')
 const {traversal} = require('./point-helpers')
 

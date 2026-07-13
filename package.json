@@ -1,6 +1,6 @@
 {
-  "name": "@pulsar-edit/text-buffer",
-  "version": "15.0.0",
+  "name": "@lumine-code/text-buffer",
+  "version": "16.0.0",
   "description": "A container for large mutable strings with annotated regions",
   "main": "./src/text-buffer",
   "scripts": {
@@ -12,10 +12,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pulsar/text-buffer.git"
+    "url": "https://github.com/lumine-code/text-buffer.git"
   },
   "bugs": {
-    "url": "https://github.com/pulsar/text-buffer/issues"
+    "url": "https://github.com/lumine-code/text-buffer/issues"
   },
   "atomTestRunner": "atom-jasmine2-test-runner",
   "license": "MIT",
@@ -32,8 +32,8 @@
     "yargs": "^6.5.0"
   },
   "dependencies": {
-    "@pulsar-edit/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#74455395539148bf35a19212c8f1af65366358f9",
-    "@pulsar-edit/superstring": "https://github.com/lumine-code/superstring.git#24d41fc832e04c939a0d55feaef246e1b7e80083",
+    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#2e957c8139cab478e0dc9ecbdb424f09ca80a53e",
+    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#f1eea53826a54b5a246d262cdb5e43765d212332",
     "delegato": "^1.0.0",
     "diff": "^2.2.1",
     "event-kit": "^2.4.0",

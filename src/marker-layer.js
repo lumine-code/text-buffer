@@ -3,7 +3,7 @@ const {Emitter} = require('event-kit');
 const Point = require("./point");
 const Range = require("./range");
 const Marker = require("./marker");
-const {MarkerIndex} = require("@pulsar-edit/superstring")
+const {MarkerIndex} = require("@lumine-code/superstring")
 const {intersectSet} = require("./set-helpers");
 const SerializationVersion = 2;
 

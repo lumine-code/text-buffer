@@ -1,4 +1,4 @@
-const {MarkerIndex} = require('@pulsar-edit/superstring')
+const {MarkerIndex} = require('@lumine-code/superstring')
 const {Emitter} = require('event-kit')
 const Point = require('../../src/point')
 const Range = require('../../src/range')

@@ -1,4 +1,4 @@
-const {Patch} = require('@pulsar-edit/superstring')
+const {Patch} = require('@lumine-code/superstring')
 const {Emitter} = require('event-kit')
 const Point = require('./point')
 const Range = require('./range')
