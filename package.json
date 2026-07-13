@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#2e957c8139cab478e0dc9ecbdb424f09ca80a53e",
-    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#f1eea53826a54b5a246d262cdb5e43765d212332",
+    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#1e04592de92c3957e1dff8da3a09f2b9d8fe2987",
     "delegato": "^1.0.0",
     "diff": "^2.2.1",
     "event-kit": "^2.4.0",
