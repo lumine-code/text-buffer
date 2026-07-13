@@ -1,7 +1,7 @@
 const fs = require('fs-plus')
 const path = require('path')
 const {Writable, Transform} = require('stream')
-const temp = require('temp')
+const temp = require('./helpers/temp')
 const {Disposable} = require('event-kit')
 const Point = require('../src/point')
 const Range = require('../src/range')

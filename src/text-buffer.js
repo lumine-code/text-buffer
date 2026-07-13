@@ -2,9 +2,9 @@ const {Emitter, CompositeDisposable} = require('event-kit')
 const {File} = require('@lumine-code/pathwatcher')
 const diff = require('diff')
 const _ = require('underscore-plus')
+const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
-const mkdirp = require('mkdirp')
 const {TextBuffer: NativeTextBuffer} = require('@lumine-code/superstring')
 const Point = require('./point')
 const Range = require('./range')
@@ -1971,11 +1971,7 @@ class TextBuffer {
     try {
       let destination
       if (file instanceof File) {
-        await new Promise((resolve, reject) => {
-          mkdirp(path.dirname(filePath), error => {
-            error ? reject(error) : resolve()
-          })
-        })
+        await fs.promises.mkdir(path.dirname(filePath), {recursive: true})
         destination = filePath
       } else {
         destination = file.createWriteStream()

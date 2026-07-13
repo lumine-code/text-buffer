@@ -33,7 +33,7 @@ if (argv.rebuild) {
   childProcess.spawnSync('npm', ['rebuild'], {env, stdio: 'inherit'})
 }
 
-normalizeCommand = (command) => {
+const normalizeCommand = (command) => {
   return process.platform === 'win32' ? path.normalize(command + '.cmd') : command
 }
 
@@ -41,5 +41,6 @@ normalizeCommand = (command) => {
 if (argv.interactive) {
   childProcess.spawnSync(normalizeCommand('./node_modules/.bin/electron'), ['spec/support/runner', 'spec/**/*-spec.*'], {stdio: 'inherit', cwd: path.join(__dirname, '..')})
 } else {
-  process.exit(childProcess.spawnSync(normalizeCommand('./node_modules/.bin/jasmine'), ['--stop-on-failure=true'], {stdio: 'inherit'}).status)
+  const jasminePath = path.resolve(path.dirname(require.resolve('jasmine')), '..', 'bin', 'jasmine.js')
+  process.exit(childProcess.spawnSync(process.execPath, [jasminePath, '--stop-on-failure=true'], {stdio: 'inherit'}).status)
 }

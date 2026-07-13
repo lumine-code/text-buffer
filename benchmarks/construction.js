@@ -37,7 +37,7 @@ for (let sizeInKB of SIZES_IN_KB) {
 
 function getMillisecondsPerMegabyte(timesInMS) {
   const series = timesInMS.map((time, i) => [SIZES_IN_KB[i], time * 1024])
-  const slownessRegression = regression('linear', series)
+  const slownessRegression = regression.linear(series)
   return slownessRegression.equation[0]
 }
 
