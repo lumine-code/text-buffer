@@ -1131,7 +1131,9 @@ describe('TextBuffer IO', () => {
       spyOn(NativeTextBuffer.prototype, 'load').and.callFake(function (pathToLoad, ...args) {
         const pathToLoadCopy = temp.openSync('atom').path
         fs.writeFileSync(pathToLoadCopy, fs.readFileSync(pathToLoad))
-        return timeoutPromise(buffer.fileChangeDelay + 100)
+        // Keep every load in flight until all three write bursts have had
+        // enough time to produce their debounced change notifications.
+        return timeoutPromise(buffer.fileChangeDelay * 4)
           .then(() => originalLoad.call(this, pathToLoadCopy, ...args))
       })
 
