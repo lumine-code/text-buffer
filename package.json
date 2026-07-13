@@ -36,7 +36,7 @@
     "diff": "^2.2.1",
     "event-kit": "^2.4.0",
     "fs-admin": "^0.19.0",
-    "fs-plus": "^3.0.0",
+    "fs-plus": "https://github.com/lumine-code/fs-plus.git#c00d99a85642969635218ed8862a37f7a0bce6e2",
     "grim": "^2.0.2",
     "mkdirp": "^0.5.1",
     "underscore-plus": "https://github.com/lumine-code/underscore-plus.git#50185d085c663caeb16d6a2220e23f42766d764f",
