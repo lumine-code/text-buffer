@@ -1,4 +1,4 @@
-const {Emitter} = require('event-kit');
+const {Emitter, Disposable} = require('event-kit');
 
 // Essential: Represents a buffer annotation that remains logically stationary
 // even as the buffer changes. This is used to represent cursors, folds, snippet
@@ -65,7 +65,6 @@ class DisplayMarker {
     this.emitter.emit('did-destroy');
     this.layer.didDestroyMarker(this);
     this.emitter.dispose();
-    this.emitter.clear();
     this.bufferMarkerSubscription?.dispose();
   }
 
@@ -123,7 +122,15 @@ class DisplayMarker {
       this.bufferMarkerSubscription = this.bufferMarker.onDidChange(event => this.notifyObservers(event.textChanged));
       this.hasChangeObservers = true;
     }
-    return this.emitter.on('did-change', callback);
+    const subscription = this.emitter.on('did-change', callback);
+    return new Disposable(() => {
+      subscription.dispose();
+      if (!this.emitter.disposed && this.emitter.listenerCountForEventName('did-change') === 0) {
+        this.bufferMarkerSubscription?.dispose();
+        this.bufferMarkerSubscription = null;
+        this.hasChangeObservers = false;
+      }
+    });
   }
 
   // Essential: Invoke the given callback when the marker is destroyed.
@@ -133,7 +140,13 @@ class DisplayMarker {
   // Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
   onDidDestroy(callback) {
     this.layer.markersWithDestroyListeners.add(this);
-    return this.emitter.on('did-destroy', callback);
+    const subscription = this.emitter.on('did-destroy', callback);
+    return new Disposable(() => {
+      subscription.dispose();
+      if (!this.emitter.disposed && this.emitter.listenerCountForEventName('did-destroy') === 0) {
+        this.layer.markersWithDestroyListeners.delete(this);
+      }
+    });
   }
 
   /*

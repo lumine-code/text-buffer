@@ -1,4 +1,4 @@
-const {Emitter, CompositeDisposable} = require('event-kit');
+const {Emitter, CompositeDisposable, Disposable} = require('event-kit');
 const DisplayMarker = require('./display-marker');
 const Range = require('./range');
 const Point = require('./point');
@@ -14,7 +14,7 @@ class DisplayMarkerLayer {
     this.ownsBufferMarkerLayer = ownsBufferMarkerLayer;
     this.id = this.bufferMarkerLayer.id;
     this.bufferMarkerLayer.displayMarkerLayers.add(this);
-    this.markersById = {};
+    this.markersById = new Map();
     this.destroyed = false;
     this.emitter = new Emitter;
     this.subscriptions = new CompositeDisposable;
@@ -52,7 +52,7 @@ class DisplayMarkerLayer {
     for (let marker of this.markersWithDestroyListeners) {
       marker.didDestroyBufferMarker();
     }
-    this.markersById = {};
+    this.markersById = new Map();
   }
 
   // Essential: Determine whether this layer has been destroyed.
@@ -104,8 +104,15 @@ class DisplayMarkerLayer {
   //
   // Returns a {Disposable}.
   onDidCreateMarker(callback) {
-    return this.bufferMarkerLayer.onDidCreateMarker(bufferMarker => {
+    const subscription = this.bufferMarkerLayer.onDidCreateMarker(bufferMarker => {
       return callback(this.getMarker(bufferMarker.id));
+    });
+    // Track the subscription so it doesn't outlive this layer when the
+    // underlying buffer marker layer isn't owned by it.
+    this.subscriptions.add(subscription);
+    return new Disposable(() => {
+      this.subscriptions.remove(subscription);
+      subscription.dispose();
     });
   }
 
@@ -273,11 +280,14 @@ class DisplayMarkerLayer {
   //
   // Returns a {DisplayMarker}.
   getMarker(id) {
-    let bufferMarker, displayMarker;
-    if (displayMarker = this.markersById[id]) {
-      return displayMarker;
-    } else if (bufferMarker = this.bufferMarkerLayer.getMarker(id)) {
-      return this.markersById[id] = new DisplayMarker(this, bufferMarker);
+    id = parseInt(id);
+    const displayMarker = this.markersById.get(id);
+    if (displayMarker) { return displayMarker; }
+    const bufferMarker = this.bufferMarkerLayer.getMarker(id);
+    if (bufferMarker) {
+      const marker = new DisplayMarker(this, bufferMarker);
+      this.markersById.set(id, marker);
+      return marker;
     }
   }
 
@@ -370,15 +380,15 @@ class DisplayMarkerLayer {
   }
 
   destroyMarker(id) {
-    let marker;
-    if (marker = this.markersById[id]) {
+    const marker = this.markersById.get(id);
+    if (marker) {
       return marker.didDestroyBufferMarker();
     }
   }
 
   didDestroyMarker(marker) {
     this.markersWithDestroyListeners.delete(marker);
-    return delete this.markersById[marker.id];
+    return this.markersById.delete(marker.id);
   }
 
   translateToBufferMarkerLayerFindParams(params) {

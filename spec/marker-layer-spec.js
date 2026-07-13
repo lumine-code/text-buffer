@@ -217,6 +217,16 @@ describe("MarkerLayer", function() {
       expect(layer1.findMarkers({containsPoint: [0, 4]})).toEqual([layer1Marker]);
       expect(layer2.findMarkers({containsPoint: [0, 4]})).toEqual([layer2Marker]);
     })
+
+    it("does not mutate the params object, so it can be reused across calls", () => {
+      const marker1 = layer1.markRange([[0, 3], [0, 6]], {class: 'a'});
+      layer1.markRange([[0, 10], [0, 12]], {class: 'b'});
+
+      const params = {containsPoint: [0, 4], class: 'a'};
+      expect(layer1.findMarkers(params)).toEqual([marker1]);
+      expect(params).toEqual({containsPoint: [0, 4], class: 'a'});
+      expect(layer1.findMarkers(params)).toEqual([marker1]);
+    })
   });
 
   describe("::onDidUpdate", () => {

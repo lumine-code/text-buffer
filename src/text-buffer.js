@@ -1759,7 +1759,7 @@ class TextBuffer {
     const markers = []
     for (let id = startId; id < this.nextMarkerId; id++) {
       const marker = new Marker(id, markerLayer, null, options, true)
-      markerLayer.markersById[id] = marker
+      markerLayer.markersById.set(id, marker)
       markers.push(marker)
     }
     return markers

@@ -1,4 +1,3 @@
-const {clone} = require("underscore-plus");
 const {Emitter} = require('event-kit');
 const Point = require("./point");
 const Range = require("./range");
@@ -26,8 +25,10 @@ class MarkerLayer {
       result[layerId] = {};
       for (markerId in markerSnapshots) {
         markerSnapshot = markerSnapshots[markerId];
-        result[layerId][markerId] = clone(markerSnapshot);
-        result[layerId][markerId].range = Range.fromObject(markerSnapshot.range);
+        result[layerId][markerId] = {
+          ...markerSnapshot,
+          range: Range.fromObject(markerSnapshot.range)
+        };
       }
     }
     return result;
@@ -58,7 +59,7 @@ class MarkerLayer {
 
     this.emitter = new Emitter();
     this.index = new MarkerIndex();
-    this.markersById = {};
+    this.markersById = new Map();
     this.markersWithChangeListeners = new Set();
     this.markersWithDestroyListeners = new Set();
     this.displayMarkerLayers = new Set();
@@ -70,10 +71,12 @@ class MarkerLayer {
   // locations.
   copy() {
     let copy = this.delegate.addMarkerLayer({
+      destroyInvalidatedMarkers: this.destroyInvalidatedMarkers,
       maintainHistory: this.maintainHistory,
+      persistent: this.persistent,
       role: this.role
     });
-    for (let marker of Object.values(this.markersById)) {
+    for (let marker of this.markersById.values()) {
       let snapshot = marker.getSnapshot(null);
       copy.createMarker(marker.getRange(), snapshot);
     }
@@ -86,12 +89,14 @@ class MarkerLayer {
       return;
     }
     this.clear();
+    // Mark the layer destroyed before notifying the display marker layers; a
+    // display layer that owns this layer calls back into this method.
+    this.destroyed = true;
     this.delegate.markerLayerDestroyed(this);
     this.displayMarkerLayers.forEach(function(displayMarkerLayer) {
       return displayMarkerLayer.destroy();
     });
     this.displayMarkerLayers.clear();
-    this.destroyed = true;
     this.emitter.emit('did-destroy');
     return this.emitter.clear();
   }
@@ -99,10 +104,11 @@ class MarkerLayer {
   // Public: Remove all markers from this layer.
   clear() {
     this.markersWithDestroyListeners.forEach(function(marker) {
-      return marker.destroy();
+      // Suppress the per-marker update events; a single one is emitted below.
+      return marker.destroy(true);
     });
     this.markersWithDestroyListeners.clear();
-    this.markersById = {};
+    this.markersById = new Map();
     this.index = new MarkerIndex();
     this.displayMarkerLayers.forEach(function(layer) {
       return layer.didClearBufferMarkerLayer();
@@ -126,21 +132,21 @@ class MarkerLayer {
 
   // Returns a {Marker}.
   getMarker(id) {
-    return this.markersById[id];
+    return this.markersById.get(parseInt(id));
   }
 
   // Public: Get all existing markers on the marker layer.
 
   // Returns an {Array} of {Marker}s.
   getMarkers() {
-    return Object.values(this.markersById);
+    return [...this.markersById.values()];
   }
 
   // Public: Get the number of markers in the marker layer.
 
   // Returns a {Number}.
   getMarkerCount() {
-    return Object.keys(this.markersById).length;
+    return this.markersById.size;
   }
 
   // Public: Find markers in the layer conforming to the given parameters.
@@ -148,6 +154,9 @@ class MarkerLayer {
   // See the documentation for {TextBuffer::findMarkers}.
   findMarkers(params) {
     let markerIds = null;
+    // Range-based params are consumed by the index queries below; the rest are
+    // matched against each candidate marker. The caller's object is not mutated.
+    const markerParams = {};
     for (let [key, value] of Object.entries(params)) {
       let start, end, position;
       switch (key) {
@@ -201,20 +210,21 @@ class MarkerLayer {
           markerIds = filterSet(markerIds, this.index.findContainedIn(start, end));
           break;
         default:
-          continue;
+          markerParams[key] = value;
       }
-      delete params[key];
     }
     if (markerIds == null) {
-      markerIds = new Set(Object.keys(this.markersById));
+      markerIds = new Set(this.markersById.keys());
     }
     let result = [];
     for (let markerId of markerIds) {
-      let marker = this.markersById[markerId];
-      if (!marker.matchesParams(params)) continue;
+      let marker = this.markersById.get(markerId);
+      if (!marker.matchesParams(markerParams)) continue;
       result.push(marker);
     }
-    result.sort((a, b) => a.compare(b));
+    // Tiebreak equal ranges by id so the order doesn't depend on the
+    // insertion order of `markersById`.
+    result.sort((a, b) => a.compare(b) || (a.id - b.id));
     return result;
   }
 
@@ -297,19 +307,20 @@ class MarkerLayer {
   /*
   Section: Event subscription
   */
-  // Public: Subscribe to be notified asynchronously whenever markers are
-  // created, updated, or destroyed on this layer. *Prefer this method for
-  // optimal performance when interacting with layers that could contain large
-  // numbers of markers.*
+  // Public: Subscribe to be notified whenever markers are created, updated,
+  // or destroyed on this layer. *Prefer this method for optimal performance
+  // when interacting with layers that could contain large numbers of markers.*
   //
   // * `callback` A {Function} that will be called with no arguments when changes
   //   occur on this layer.
   //
-  // Subscribers are notified once, asynchronously when any number of changes
-  // occur in a given tick of the event loop. You should re-query the layer
-  // to determine the state of markers in which you're interested in. It may
-  // be counter-intuitive, but this is much more efficient than subscribing to
-  // events on individual markers, which are expensive to deliver.
+  // Changes made within a {TextBuffer::transact} block are batched: subscribers
+  // are notified once, at the end of the transaction. Changes made outside a
+  // transaction notify subscribers synchronously per change. Either way, you
+  // should re-query the layer to determine the state of markers in which you're
+  // interested in. It may be counter-intuitive, but this is much more efficient
+  // than subscribing to events on individual markers, which are expensive to
+  // deliver.
 
   // Returns a {Disposable}.
   onDidUpdate(callback) {
@@ -345,7 +356,7 @@ class MarkerLayer {
   splice(start, oldExtent, newExtent) {
     let invalidated = this.index.splice(start, oldExtent, newExtent);
     for (let id of invalidated.touch) {
-      let marker = this.markersById[id];
+      let marker = this.markersById.get(id);
       if (invalidated[marker.getInvalidationStrategy()]?.has(id)) {
         if (this.destroyInvalidatedMarkers) {
           marker.destroy();
@@ -360,7 +371,7 @@ class MarkerLayer {
     if (snapshots == null) return;
 
     let snapshotIds = Object.keys(snapshots);
-    let existingMarkerIds = Object.keys(this.markersById);
+    let existingMarkerIds = [...this.markersById.keys()];
 
     for (let id of snapshotIds) {
       let snapshot = snapshots[id];
@@ -368,13 +379,13 @@ class MarkerLayer {
         this.createMarker(snapshot.range, snapshot, true);
         continue;
       }
-      let marker = this.markersById[id];
+      let marker = this.markersById.get(parseInt(id));
       if (marker) {
         marker.update(marker.getRange(), snapshot, true, true);
       } else {
         marker = snapshot.marker;
         if (marker) {
-          this.markersById[marker.id] = marker;
+          this.markersById.set(marker.id, marker);
           let { range } = snapshot;
           this.index.insert(marker.id, range.start, range.end);
           marker.update(marker.getRange(), snapshot, true, true);
@@ -388,7 +399,7 @@ class MarkerLayer {
     }
 
     for (let id of existingMarkerIds) {
-      let marker = this.markersById[id];
+      let marker = this.markersById.get(id);
       if (marker && !snapshots[id]) {
         marker.destroy(true);
       }
@@ -398,8 +409,7 @@ class MarkerLayer {
   createSnapshot() {
     let result = {};
     let ranges = this.index.dump();
-    for (let id of Object.keys(this.markersById)) {
-      let marker = this.markersById[id];
+    for (let [id, marker] of this.markersById) {
       result[id] = marker.getSnapshot(Range.fromObject(ranges[id]));
     }
     return result;
@@ -416,10 +426,8 @@ class MarkerLayer {
   serialize() {
     let ranges = this.index.dump();
     let markersById = {};
-    for (let id of Object.keys(this.markersById)) {
-      let marker = this.markersById[id];
-      let snapshot = marker.getSnapshot(Range.fromObject(ranges[id]), false);
-      markersById[id] = snapshot;
+    for (let [id, marker] of this.markersById) {
+      markersById[id] = marker.getSnapshot(Range.fromObject(ranges[id]), false);
     }
     return {
       id: this.id,
@@ -460,8 +468,8 @@ class MarkerLayer {
   }
 
   destroyMarker(marker, suppressMarkerLayerUpdateEvents = false) {
-    if (this.markersById.hasOwnProperty(marker.id)) {
-      delete this.markersById[marker.id];
+    if (this.markersById.has(marker.id)) {
+      this.markersById.delete(marker.id);
       this.index.remove(marker.id);
       this.markersWithChangeListeners.delete(marker);
       this.markersWithDestroyListeners.delete(marker);
@@ -531,7 +539,9 @@ class MarkerLayer {
     Point.assertValid(range.start);
     Point.assertValid(range.end);
     this.index.insert(id, range.start, range.end);
-    return this.markersById[id] = new Marker(id, this, range, params);
+    const marker = new Marker(id, this, range, params);
+    this.markersById.set(id, marker);
+    return marker;
   }
 
   emitUpdateEvent() {

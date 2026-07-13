@@ -1,11 +1,14 @@
-const {extend, isEqual} = require('underscore-plus');
-const {Emitter} = require('event-kit');
-const Delegator = require('delegato');
+const {isEqual} = require('underscore-plus');
+const {Emitter, Disposable} = require('event-kit');
 const Point = require('./point');
 const Range = require('./range');
-const Grim = require('grim');
 
 const OptionKeys = new Set(['reversed', 'tailed', 'invalidate', 'exclusive']);
+
+// Screen-coordinate translation options accepted by the DisplayMarkerLayer
+// marking methods; they affect coordinate translation only and are never
+// marker state, so they must not be stored as custom properties.
+const TranslationOptionKeys = new Set(['clipDirection', 'skipSoftWrapIndentation']);
 
 // Private: Represents a buffer annotation that remains logically stationary
 // even as the buffer changes. This is used to represent cursors, folds, snippet
@@ -28,44 +31,33 @@ const OptionKeys = new Set(['reversed', 'tailed', 'invalidate', 'exclusive']);
 class Marker {
   static extractParams(inputParams) {
     const outputParams = {};
-    let containsCustomProperties = false;
     if (inputParams != null) {
-      for (var key of Object.keys(inputParams)) {
+      for (const key of Object.keys(inputParams)) {
         if (OptionKeys.has(key)) {
           outputParams[key] = inputParams[key];
-        } else if ((key === 'clipDirection') || (key === 'skipSoftWrapIndentation')) {
-          // TODO: Ignore these two keys for now. Eventually, when the
-          // deprecation below will be gone, we can remove this conditional as
-          // well, and just return standard marker properties.
-        } else {
-          containsCustomProperties = true;
+        } else if (!TranslationOptionKeys.has(key)) {
           if (outputParams.properties == null) { outputParams.properties = {}; }
           outputParams.properties[key] = inputParams[key];
         }
       }
     }
-
-    // TODO: Remove both this deprecation and the conditional above on the
-    // release after the one where we'll ship `DisplayLayer`.
-    if (containsCustomProperties) {
-      Grim.deprecate(`\
-Assigning custom properties to a marker when creating/copying it is
-deprecated. Please, consider storing the custom properties you need in
-some other object in your package, keyed by the marker's id property.\
-`);
-    }
-
     return outputParams;
   }
 
-  constructor(id, layer, _range, params, exclusivitySet) {
+  constructor(id, layer, _range, params, exclusivitySet = false) {
     // The `_range` parameter is kept in place just to keep the API stable,
     // but it's not used; the marker asks its layer for its range later on
     // via `::getRange`.
     this.id = id;
     this.layer = layer;
-    if (exclusivitySet == null) { exclusivitySet = false; }
-    ({tailed: this.tailed, reversed: this.reversed, valid: this.valid, invalidate: this.invalidate, exclusive: this.exclusive, properties: this.properties} = params);
+    ({
+      tailed: this.tailed,
+      reversed: this.reversed,
+      valid: this.valid,
+      invalidate: this.invalidate,
+      exclusive: this.exclusive,
+      properties: this.properties
+    } = params);
     this.emitter = new Emitter;
     if (this.tailed == null) { this.tailed = true; }
     if (this.reversed == null) { this.reversed = false; }
@@ -88,7 +80,13 @@ some other object in your package, keyed by the marker's id property.\
   // Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
   onDidDestroy(callback) {
     this.layer.markersWithDestroyListeners.add(this);
-    return this.emitter.on('did-destroy', callback);
+    const subscription = this.emitter.on('did-destroy', callback);
+    return new Disposable(() => {
+      subscription.dispose();
+      if (this.emitter.listenerCountForEventName('did-destroy') === 0) {
+        this.layer.markersWithDestroyListeners.delete(this);
+      }
+    });
   }
 
   // Public: Invoke the given callback when the state of the marker changes.
@@ -115,7 +113,15 @@ some other object in your package, keyed by the marker's id property.\
       this.hasChangeObservers = true;
       this.layer.markersWithChangeListeners.add(this);
     }
-    return this.emitter.on('did-change', callback);
+    const subscription = this.emitter.on('did-change', callback);
+    return new Disposable(() => {
+      subscription.dispose();
+      if (this.emitter.listenerCountForEventName('did-change') === 0) {
+        this.previousEventState = null;
+        this.hasChangeObservers = false;
+        this.layer.markersWithChangeListeners.delete(this);
+      }
+    });
   }
 
   // Public: Returns the current {Range} of the marker. The range is immutable.
@@ -328,7 +334,7 @@ some other object in your package, keyed by the marker's id property.\
   // * `properties` {Object}
   setProperties(properties) {
     return this.update(this.getRange(), {
-      properties: extend({}, this.properties, properties)
+      properties: {...this.properties, ...properties}
     });
   }
 
@@ -336,16 +342,14 @@ some other object in your package, keyed by the marker's id property.\
   // marker.
   //
   // * `params` {Object}
-  copy(options) {
-    if (options == null) { options = {}; }
-    const snapshot = this.getSnapshot();
+  copy(options = {}) {
+    const snapshot = this.getSnapshot(null, false);
     options = Marker.extractParams(options);
-    return this.layer.createMarker(this.getRange(), extend(
-      {},
-      snapshot,
-      options,
-      {properties: extend({}, snapshot.properties, options.properties)}
-    ));
+    return this.layer.createMarker(this.getRange(), {
+      ...snapshot,
+      ...options,
+      properties: {...snapshot.properties, ...options.properties}
+    });
   }
 
   // Public: Destroys the marker, causing it to emit the 'destroyed' event.
@@ -353,9 +357,7 @@ some other object in your package, keyed by the marker's id property.\
     if (this.isDestroyed()) { return; }
 
     if (this.trackDestruction) {
-      const error = new Error;
-      Error.captureStackTrace(error);
-      this.destroyStackTrace = error.stack;
+      this.destroyStackTrace = new Error().stack;
     }
 
     this.layer.destroyMarker(this, suppressMarkerLayerUpdateEvents);
@@ -370,10 +372,34 @@ some other object in your package, keyed by the marker's id property.\
     return this.layer.compareMarkers(this.id, other.id);
   }
 
+  // Public: Returns a {Boolean} indicating whether the marker's range contains
+  // the given point.
+  //
+  // * `point` A {Point} or point-compatible {Array}
+  containsPoint(point) {
+    return this.getRange().containsPoint(point);
+  }
+
+  // Public: Returns a {Boolean} indicating whether the marker's range contains
+  // the given range.
+  //
+  // * `range` A {Range} or range-compatible {Array}
+  containsRange(range) {
+    return this.getRange().containsRange(range);
+  }
+
+  // Public: Returns a {Boolean} indicating whether the marker's range
+  // intersects the given row.
+  //
+  // * `row` A row {Number}
+  intersectsRow(row) {
+    return this.getRange().intersectsRow(row);
+  }
+
   // Returns whether this marker matches the given parameters. The parameters
   // are the same as {MarkerLayer::findMarkers}.
   matchesParams(params) {
-    for (var key of Object.keys(params)) {
+    for (const key of Object.keys(params)) {
       if (!this.matchesParam(key, params[key])) { return false; }
     }
     return true;
@@ -398,7 +424,7 @@ some other object in your package, keyed by the marker's id property.\
       case 'intersectsRow':
         return this.intersectsRow(value);
       case 'invalidate': case 'reversed': case 'tailed':
-        return isEqual(this[key], value);
+        return this[key] === value;
       case 'valid':
         return this.isValid() === value;
       default:
@@ -406,20 +432,21 @@ some other object in your package, keyed by the marker's id property.\
     }
   }
 
-  update(oldRange, {range, reversed, tailed, valid, exclusive, properties}, textChanged, suppressMarkerLayerUpdateEvents) {
-    let propertiesChanged;
-    if (textChanged == null) { textChanged = false; }
-    if (suppressMarkerLayerUpdateEvents == null) { suppressMarkerLayerUpdateEvents = false; }
+  update(oldRange, {range, reversed, tailed, valid, exclusive, properties}, textChanged = false, suppressMarkerLayerUpdateEvents = false) {
     if (this.isDestroyed()) { return; }
 
     oldRange = Range.fromObject(oldRange);
     if (range != null) { range = Range.fromObject(range); }
 
     const wasExclusive = this.isExclusive();
-    let updated = (propertiesChanged = false);
+    let updated = false;
+    let propertiesChanged = false;
 
     if ((range != null) && !range.isEqual(oldRange)) {
       this.layer.setMarkerRange(this.id, range);
+      // The layer clips the range to the buffer's bounds; re-read it so change
+      // events report the marker's actual positions.
+      range = this.getRange();
       updated = true;
     }
 
@@ -461,8 +488,7 @@ some other object in your package, keyed by the marker's id property.\
     return updated;
   }
 
-  getSnapshot(range, includeMarker) {
-    if (includeMarker == null) { includeMarker = true; }
+  getSnapshot(range, includeMarker = true) {
     const snapshot = {
       range,
       properties: this.properties,
@@ -539,14 +565,5 @@ some other object in your package, keyed by the marker's id property.\
     return true;
   }
 }
-
-Delegator.includeInto(Marker);
-
-Marker.delegatesMethods(
-  'containsPoint',
-  'containsRange',
-  'intersectsRow',
-  {toMethod: 'getRange'}
-);
 
 module.exports = Marker;

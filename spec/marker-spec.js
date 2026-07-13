@@ -299,6 +299,25 @@ describe("Marker", function() {
         expect(marker.getRange()).toEqual([[0, 0], [0, 26]]);
       });
 
+      it("reports clipped positions to ::onDidChange observers", function() {
+        marker.setRange([[0, 3], [100, 100]]);
+        expect(changes).toEqual([{
+          oldHeadPosition: [0, 9], newHeadPosition: [0, 26],
+          oldTailPosition: [0, 6], newTailPosition: [0, 3],
+          hadTail: true, hasTail: true,
+          wasValid: true, isValid: true,
+          oldProperties: {}, newProperties: {},
+          textChanged: false
+        }]);
+
+        // The stored event state also reflects the clipped range, so the next
+        // event's old positions are the marker's actual previous positions.
+        changes = [];
+        marker.setRange([[0, 1], [0, 2]]);
+        expect(changes[0].oldHeadPosition).toEqual([0, 26]);
+        expect(changes[0].oldTailPosition).toEqual([0, 3]);
+      });
+
       it("emits the right events when called inside of an ::onDidChange handler", function() {
         marker.onDidChange(function(change) {
           if (marker.getHeadPosition().isEqual([0, 5])) {
@@ -801,6 +820,49 @@ describe("Marker", function() {
       const marker = buffer.markRange([[0, 3], [0, 6]]);
       marker.destroy();
       marker.destroy();
+    });
+  });
+
+  describe("subscription disposal", function() {
+    it("stops tracking the marker for change events once all ::onDidChange subscriptions are disposed", function() {
+      const marker = buffer.markRange([[0, 3], [0, 6]]);
+      const layer = marker.layer;
+
+      const subscription1 = marker.onDidChange(() => {});
+      const subscription2 = marker.onDidChange(() => {});
+      expect(layer.markersWithChangeListeners.has(marker)).toBe(true);
+
+      subscription1.dispose();
+      expect(layer.markersWithChangeListeners.has(marker)).toBe(true);
+      subscription2.dispose();
+      expect(layer.markersWithChangeListeners.has(marker)).toBe(false);
+
+      // Resubscribing tracks the marker again, with fresh event state.
+      const changes = [];
+      marker.onDidChange(change => changes.push(change));
+      expect(layer.markersWithChangeListeners.has(marker)).toBe(true);
+      marker.setRange([[0, 1], [0, 2]]);
+      expect(changes.length).toBe(1);
+      expect(changes[0].oldHeadPosition).toEqual([0, 6]);
+    });
+
+    it("stops tracking the marker for destroy events once all ::onDidDestroy subscriptions are disposed", function() {
+      const marker = buffer.markRange([[0, 3], [0, 6]]);
+      const layer = marker.layer;
+
+      const subscription = marker.onDidDestroy(() => {});
+      expect(layer.markersWithDestroyListeners.has(marker)).toBe(true);
+      subscription.dispose();
+      expect(layer.markersWithDestroyListeners.has(marker)).toBe(false);
+    });
+
+    it("does not blow up when subscriptions are disposed after the marker is destroyed", function() {
+      const marker = buffer.markRange([[0, 3], [0, 6]]);
+      const changeSubscription = marker.onDidChange(() => {});
+      const destroySubscription = marker.onDidDestroy(() => {});
+      marker.destroy();
+      changeSubscription.dispose();
+      destroySubscription.dispose();
     });
   });
 
