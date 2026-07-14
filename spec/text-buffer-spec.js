@@ -4,7 +4,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-const fs = require('fs-plus');
+const fs = require('@lumine-code/fs-plus');
 const path = require('path');
 const {join} = path;
 const temp = require('./helpers/temp');
@@ -24,7 +24,7 @@ describe("TextBuffer", function() {
 
   beforeEach(function() {
     temp.track();
-    jasmine.addCustomEqualityTester(require("underscore-plus").isEqual);
+    jasmine.addCustomEqualityTester(require("@lumine-code/underscore-plus").isEqual);
     // When running specs in Atom, setTimeout is spied on by default.
     jasmine.useRealClock?.();
   });

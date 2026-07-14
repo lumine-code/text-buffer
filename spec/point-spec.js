@@ -6,7 +6,7 @@
 const Point = require('../src/point');
 
 describe("Point", function() {
-  beforeEach(() => jasmine.addCustomEqualityTester(require("underscore-plus").isEqual));
+  beforeEach(() => jasmine.addCustomEqualityTester(require("@lumine-code/underscore-plus").isEqual));
 
   describe("::negate()", () => it("should negate the row and column", function() {
     expect(new Point( 0,  0).negate().toString()).toBe("(0, 0)");

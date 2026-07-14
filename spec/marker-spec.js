@@ -1,11 +1,11 @@
-const {difference, times, uniq} = require('underscore-plus');
+const {difference, times, uniq} = require('@lumine-code/underscore-plus');
 const TextBuffer = require('../src/text-buffer');
 
 describe("Marker", function() {
   let buffer, markerCreations, markersUpdatedCount;
 
   beforeEach(function() {
-    jasmine.addCustomEqualityTester(require("underscore-plus").isEqual);
+    jasmine.addCustomEqualityTester(require("@lumine-code/underscore-plus").isEqual);
     buffer = new TextBuffer({text: "abcdefghijklmnopqrstuvwxyz"});
     markerCreations = [];
     buffer.onDidCreateMarker(marker => markerCreations.push(marker));

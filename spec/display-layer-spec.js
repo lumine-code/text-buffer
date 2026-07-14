@@ -14,7 +14,7 @@ const LINE_ENDING_INVISIBLES_REGEXP = new RegExp(`${CR_INVISIBLE}?${EOL_INVISIBL
 
 describe('DisplayLayer', () => {
   beforeEach(() => {
-    jasmine.addCustomEqualityTester(require('underscore-plus').isEqual)
+    jasmine.addCustomEqualityTester(require('@lumine-code/underscore-plus').isEqual)
   })
 
   describe('copy()', () => {

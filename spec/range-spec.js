@@ -1,7 +1,7 @@
 const Range = require('../src/range');
 
 describe("Range", function() {
-  beforeEach(() => jasmine.addCustomEqualityTester(require("underscore-plus").isEqual));
+  beforeEach(() => jasmine.addCustomEqualityTester(require("@lumine-code/underscore-plus").isEqual));
 
   describe("::intersectsWith(other, [exclusive])", function() {
     const intersectsWith = function(range1, range2, exclusive) {

@@ -1,4 +1,4 @@
-const {isEqual} = require('underscore-plus');
+const {isEqual} = require('@lumine-code/underscore-plus');
 const {Emitter, Disposable} = require('event-kit');
 const Point = require('./point');
 const Range = require('./range');

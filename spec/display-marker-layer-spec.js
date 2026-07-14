@@ -4,7 +4,7 @@ const Range = require('../src/range');
 const SampleText = require('./helpers/sample-text');
 
 describe("DisplayMarkerLayer", function() {
-  beforeEach(() => jasmine.addCustomEqualityTester(require("underscore-plus").isEqual));
+  beforeEach(() => jasmine.addCustomEqualityTester(require("@lumine-code/underscore-plus").isEqual));
 
   it("allows DisplayMarkers to be created and manipulated in screen coordinates", function() {
     const buffer = new TextBuffer({text: 'abc\ndef\nghi\nj\tk\tl\nmno'});

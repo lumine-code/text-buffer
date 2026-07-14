@@ -34,9 +34,9 @@
     "diff": "^9.0.0",
     "event-kit": "^2.5.3",
     "fs-admin": "^0.20.0",
-    "fs-plus": "https://github.com/lumine-code/fs-plus.git#6be512460cd7a6d617277f9608b3fcba264cb3be",
+    "@lumine-code/fs-plus": "https://github.com/lumine-code/fs-plus.git#6be512460cd7a6d617277f9608b3fcba264cb3be",
     "grim": "^2.0.3",
-    "underscore-plus": "https://github.com/lumine-code/underscore-plus.git#330ad1fe2fae4e495a5f52939d8d1d7592ce4e65",
+    "@lumine-code/underscore-plus": "https://github.com/lumine-code/underscore-plus.git#330ad1fe2fae4e495a5f52939d8d1d7592ce4e65",
     "winattr": "^3.0.0"
   },
   "standard": {

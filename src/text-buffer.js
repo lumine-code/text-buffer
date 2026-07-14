@@ -1,7 +1,7 @@
 const {Emitter, CompositeDisposable} = require('event-kit')
 const {File} = require('@lumine-code/pathwatcher')
 const diff = require('diff')
-const _ = require('underscore-plus')
+const _ = require('@lumine-code/underscore-plus')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
