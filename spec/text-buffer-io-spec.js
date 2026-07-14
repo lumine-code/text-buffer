@@ -468,8 +468,7 @@ describe('TextBuffer IO', () => {
       })
     })
 
-    describe('when a permission error occurs (not Windows)', () => {
-      if (process.platform === 'win32') return
+    if (process.platform !== 'win32') describe('when a permission error occurs (not Windows)', () => {
 
       beforeEach(() => {
         const save = NativeTextBuffer.prototype.save
@@ -515,8 +514,7 @@ describe('TextBuffer IO', () => {
       })
     })
 
-    describe('when a permission error occurs (Windows)', () => {
-      if (process.platform !== 'win32') return
+    if (process.platform === 'win32') describe('when a permission error occurs (Windows)', () => {
 
       it('can bypass hidden files', async done => {
         winattr.setSync(filePath, { hidden: true })
@@ -855,10 +853,9 @@ describe('TextBuffer IO', () => {
 
     describe('when the buffer is modified', () => {
       describe('when the encoding of the buffer is changed', () => {
-        beforeEach(async done => {
+        beforeEach(async () => {
           const filePath = path.join(__dirname, 'fixtures', 'win1251.txt')
           buffer = await TextBuffer.load(filePath)
-          done()
         })
 
         it('does not reload the contents from the disk', done => {
@@ -880,13 +877,14 @@ describe('TextBuffer IO', () => {
           done()
         })
 
-        beforeEach(async done => {
+        beforeEach(async () => {
           expect(buffer.getEncoding()).toBe('utf8')
           expect(buffer.getText()).not.toBe('тест 1234 абвгдеёжз')
 
+          const changed = new Promise(resolve => buffer.onDidChange(resolve))
           buffer.setEncoding('WINDOWS-1251')
           expect(buffer.getEncoding()).toBe('WINDOWS-1251')
-          buffer.onDidChange(done)
+          await changed
         })
 
         it('reloads the contents from the disk', () => {
@@ -918,11 +916,12 @@ describe('TextBuffer IO', () => {
     })
 
     describe('when a buffer\'s encoding is changed', () => {
-      beforeEach(async done => {
+      beforeEach(async () => {
         const filePath = path.join(__dirname, 'fixtures', 'win1251.txt')
         buffer = await TextBuffer.load(filePath)
-        buffer.onDidChange(done)
+        const changed = new Promise(resolve => buffer.onDidChange(resolve))
         buffer.setEncoding('WINDOWS-1251')
+        await changed
       })
 
       it('does not push the encoding change onto the undo stack', () => {

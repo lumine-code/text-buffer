@@ -42,5 +42,5 @@ if (argv.interactive) {
   childProcess.spawnSync(normalizeCommand('./node_modules/.bin/electron'), ['spec/support/runner', 'spec/**/*-spec.*'], {stdio: 'inherit', cwd: path.join(__dirname, '..')})
 } else {
   const jasminePath = path.resolve(path.dirname(require.resolve('jasmine')), '..', 'bin', 'jasmine.js')
-  process.exit(childProcess.spawnSync(process.execPath, [jasminePath, '--stop-on-failure=true'], {stdio: 'inherit'}).status)
+  process.exit(childProcess.spawnSync(process.execPath, [jasminePath, '--fail-fast'], {stdio: 'inherit'}).status)
 }
