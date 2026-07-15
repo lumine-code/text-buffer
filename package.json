@@ -28,14 +28,14 @@
     "regression": "^2.0.1"
   },
   "dependencies": {
-    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#d3303cce3e1e1eea7a7d2757141228ce929cff72",
+    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#ffe5b7b29242c9031e11a0df85f7c0d79f6cc990",
     "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#d68207886ca8819e00e4df42f4d99dd8c5bc568b",
     "diff": "^9.0.0",
     "event-kit": "^2.5.3",
     "fs-admin": "^0.20.0",
-    "@lumine-code/fs-plus": "https://github.com/lumine-code/fs-plus.git#6be512460cd7a6d617277f9608b3fcba264cb3be",
+    "@lumine-code/fs-plus": "https://github.com/lumine-code/fs-plus.git#742e3e166f56261189ff245a63967b8f1970fadd",
     "grim": "^2.0.3",
-    "@lumine-code/underscore-plus": "https://github.com/lumine-code/underscore-plus.git#330ad1fe2fae4e495a5f52939d8d1d7592ce4e65",
+    "@lumine-code/underscore-plus": "https://github.com/lumine-code/underscore-plus.git#2b75d264c2ca01d27ee69d7cd05610a097011274",
     "winattr": "^3.0.0"
   },
   "standard": {
