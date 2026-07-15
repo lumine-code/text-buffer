@@ -29,7 +29,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#a3f906dbddc9ae21e21873b33a6e25a70fd4f4f0",
+    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#d3303cce3e1e1eea7a7d2757141228ce929cff72",
     "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#4743f207372cd24778873a0c44e7aa8dfd741de2",
     "diff": "^9.0.0",
     "event-kit": "^2.5.3",
