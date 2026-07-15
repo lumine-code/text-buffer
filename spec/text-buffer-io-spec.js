@@ -323,11 +323,16 @@ describe('TextBuffer IO', () => {
       // Modify the file after the save has been asynchronously initiated
       buffer.onDidSave(() => buffer.append('!'))
 
-      const subscription = buffer.file.onDidChange(() => setTimeout(() => {
+      // POSIX watchers (efsw and Node's fs.watch alike) can deliver several
+      // change events for a single write, so dispose on the first one — before
+      // scheduling the assertion — to avoid invoking `done` more than once.
+      const subscription = buffer.file.onDidChange(() => {
         subscription.dispose()
-        expect(events.length).toBe(0)
-        done()
-      }, buffer.fileChangeDelay))
+        setTimeout(() => {
+          expect(events.length).toBe(0)
+          done()
+        }, buffer.fileChangeDelay)
+      })
     })
 
     it('does not emit a reload event due to the save', async done => {
@@ -339,8 +344,8 @@ describe('TextBuffer IO', () => {
       buffer.save()
 
       const subscription = buffer.file.onDidChange(() => {
+        subscription.dispose()
         setTimeout(() => {
-          subscription.dispose()
           expect(events.length).toBe(0)
           done()
         }, buffer.fileChangeDelay + 100)
@@ -458,8 +463,8 @@ describe('TextBuffer IO', () => {
 
         let subscription
         let handler = () => {
+          subscription?.dispose()
           setTimeout(() => {
-            subscription?.dispose()
             expect(events.length).toBe(0)
             done()
           }, buffer.fileChangeDelay)
