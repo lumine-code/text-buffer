@@ -25,7 +25,8 @@
     "electron": "^43.1.0",
     "jasmine": "^6.3.0",
     "random-seed": "^0.3.0",
-    "regression": "^2.0.1"
+    "regression": "^2.0.1",
+    "yargs": "^17.7.2"
   },
   "dependencies": {
     "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#ffe5b7b29242c9031e11a0df85f7c0d79f6cc990",
