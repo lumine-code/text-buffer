@@ -29,8 +29,8 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#de08d8a2c3bd1c18aabc0669920c7ae2e895241a",
-    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#27b8f39a0d7dbbdfc458355231d7f68f141010d5",
+    "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#a3f906dbddc9ae21e21873b33a6e25a70fd4f4f0",
+    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#4743f207372cd24778873a0c44e7aa8dfd741de2",
     "diff": "^9.0.0",
     "event-kit": "^2.5.3",
     "fs-admin": "^0.20.0",
