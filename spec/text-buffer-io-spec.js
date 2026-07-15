@@ -324,9 +324,14 @@ describe('TextBuffer IO', () => {
       buffer.onDidSave(() => buffer.append('!'))
 
       // POSIX watchers (efsw and Node's fs.watch alike) can deliver several
-      // change events for a single write, so dispose on the first one — before
-      // scheduling the assertion — to avoid invoking `done` more than once.
+      // change events for a single write. `File::onDidChange` also invokes its
+      // callback asynchronously (it waits a tick to rule out a pending delete),
+      // so a second event can already be queued by the time we dispose. Latch
+      // the assertion so it runs once no matter how many events slip through.
+      let settled = false
       const subscription = buffer.file.onDidChange(() => {
+        if (settled) return
+        settled = true
         subscription.dispose()
         setTimeout(() => {
           expect(events.length).toBe(0)
@@ -343,7 +348,10 @@ describe('TextBuffer IO', () => {
       buffer.setText('Buffer contents')
       buffer.save()
 
+      let settled = false
       const subscription = buffer.file.onDidChange(() => {
+        if (settled) return
+        settled = true
         subscription.dispose()
         setTimeout(() => {
           expect(events.length).toBe(0)
@@ -462,7 +470,10 @@ describe('TextBuffer IO', () => {
         buffer.onDidSave(() => buffer.append('!'))
 
         let subscription
+        let settled = false
         let handler = () => {
+          if (settled) return
+          settled = true
           subscription?.dispose()
           setTimeout(() => {
             expect(events.length).toBe(0)
