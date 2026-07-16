@@ -821,6 +821,30 @@ class TextBuffer {
   //
   // * `text` A {String} containing the new buffer contents.
   setTextViaDiff (text) {
+    const changes = this.buffer.diff(text).getChanges()
+    if (changes.length === 0) return
+
+    // The native differ bounds its edit distance and degrades to a single
+    // change replacing the whole buffer when the texts differ too much. Use
+    // the line-wise JavaScript diff in that case so markers outside the
+    // changed lines are still preserved.
+    const {row: lastRow, column: lastColumn} = this.buffer.getExtent()
+    if (changes.length === 1 &&
+        changes[0].oldStart.row === 0 && changes[0].oldStart.column === 0 &&
+        changes[0].oldEnd.row === lastRow && changes[0].oldEnd.column === lastColumn) {
+      return this.setTextViaLineDiff(text)
+    }
+
+    const changeOptions = {normalizeLineEndings: false}
+    this.transact(() => {
+      for (let i = changes.length - 1; i >= 0; i--) {
+        const change = changes[i]
+        this.setTextInRange([change.oldStart, change.oldEnd], change.newText, changeOptions)
+      }
+    })
+  }
+
+  setTextViaLineDiff (text) {
     const currentText = this.getText()
     if (currentText === text) return
 

@@ -2027,6 +2027,30 @@ three\
       expect(buffer.getText()).toBe(oldText);
     });
 
+    it("preserves markers outside the changed regions", function() {
+      buffer.setText('aaa\nbbb\nccc\nddd\neee');
+      const layer = buffer.addMarkerLayer();
+      const marker = layer.markRange([[3, 0], [3, 3]]);
+      buffer.setTextViaDiff('aaa\nBBB\nccc\nddd\neee');
+      expect(buffer.getText()).toBe('aaa\nBBB\nccc\nddd\neee');
+      expect(marker.getRange().isEqual([[3, 0], [3, 3]])).toBe(true);
+    });
+
+    it("preserves markers on unchanged lines when the texts differ beyond the native edit-distance bound", function() {
+      const oldLines = [];
+      const newLines = [];
+      for (let i = 0; i < 3000; i++) {
+        oldLines.push(`line ${i}`);
+        newLines.push((i < 1000 || i >= 2000) ? `LINE ${i}` : `line ${i}`);
+      }
+      buffer.setText(oldLines.join('\n'));
+      const layer = buffer.addMarkerLayer();
+      const marker = layer.markRange([[1500, 0], [1500, 4]]);
+      buffer.setTextViaDiff(newLines.join('\n'));
+      expect(buffer.getText()).toBe(newLines.join('\n'));
+      expect(marker.getRange().isEqual([[1500, 0], [1500, 4]])).toBe(true);
+    });
+
     describe("with standard newlines", function() {
       it("can change the entire contents of the buffer with no newline at the end", function() {
         const newText = "I know you are.\nBut what am I?";
