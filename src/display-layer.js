@@ -9,6 +9,11 @@ const ScreenLineBuilder = require('./screen-line-builder')
 const {spliceArray} = require('./helpers')
 const {MAX_BUILT_IN_SCOPE_ID} = require('./constants')
 
+// Row count per entry of `screenLineBlocks`, the coarse per-block maxima of
+// `screenLineLengths` that lets `findRightmostScreenPosition` avoid a full
+// scan of every screen row.
+const SCREEN_LINE_BLOCK_SIZE = 1024
+
 class DisplayLayer {
   constructor (id, buffer, params = {}) {
     this.id = id
@@ -50,6 +55,7 @@ class DisplayLayer {
       this.spatialIndex = params.spatialIndex
       this.tabCounts = params.tabCounts
       this.screenLineLengths = params.screenLineLengths
+      this.screenLineBlocks = params.screenLineBlocks
       this.rightmostScreenPosition = params.rightmostScreenPosition
       this.indexedBufferRowCount = params.indexedBufferRowCount
     } else {
@@ -63,6 +69,7 @@ class DisplayLayer {
       })
       this.tabCounts = []
       this.screenLineLengths = []
+      this.screenLineBlocks = []
       this.rightmostScreenPosition = Point(0, 0)
       this.indexedBufferRowCount = 0
     }
@@ -99,6 +106,7 @@ class DisplayLayer {
       spatialIndex: this.spatialIndex.copy(),
       tabCounts: this.tabCounts.slice(),
       screenLineLengths: this.screenLineLengths.slice(),
+      screenLineBlocks: this.screenLineBlocks.map(({rowCount, max}) => ({rowCount, max})),
       rightmostScreenPosition: this.rightmostScreenPosition.copy(),
       indexedBufferRowCount: this.indexedBufferRowCount,
       invisibles: this.invisibles,
@@ -134,6 +142,7 @@ class DisplayLayer {
     this.spatialIndex.spliceOld(Point.ZERO, Point.INFINITY, Point.INFINITY)
     this.cachedScreenLines.length = 0
     this.screenLineLengths.length = 0
+    this.screenLineBlocks.length = 0
     this.tabCounts.length = 0
     this.rightmostScreenPosition = Point(0, 0)
   }
@@ -1021,8 +1030,7 @@ class DisplayLayer {
     }
 
     const oldScreenRowCount = oldEndScreenRow - startScreenRow
-    spliceArray(
-      this.screenLineLengths,
+    this.spliceScreenLineLengths(
       startScreenRow,
       oldScreenRowCount,
       insertedScreenLineLengths
@@ -1040,13 +1048,7 @@ class DisplayLayer {
     } else if (lastRemovedScreenRow < this.rightmostScreenPosition.row) {
       this.rightmostScreenPosition.row += insertedScreenLineLengths.length - oldScreenRowCount
     } else if (startScreenRow <= this.rightmostScreenPosition.row) {
-      this.rightmostScreenPosition = Point(0, 0)
-      for (let row = 0, rowCount = this.screenLineLengths.length; row < rowCount; row++) {
-        if (this.screenLineLengths[row] > this.rightmostScreenPosition.column) {
-          this.rightmostScreenPosition.row = row
-          this.rightmostScreenPosition.column = this.screenLineLengths[row]
-        }
-      }
+      this.rightmostScreenPosition = this.findRightmostScreenPosition()
     }
 
     spliceArray(
@@ -1061,6 +1063,74 @@ class DisplayLayer {
       oldExtent: Point(oldScreenRowCount, 0),
       newExtent: Point(insertedScreenLineLengths.length, 0)
     }
+  }
+
+  spliceScreenLineLengths (startRow, oldRowCount, insertedLengths) {
+    oldRowCount = Math.min(oldRowCount, this.screenLineLengths.length - startRow)
+    spliceArray(this.screenLineLengths, startRow, oldRowCount, insertedLengths)
+
+    // Locate the run of blocks overlapping the replaced rows. When appending
+    // past the last block, back up to include it so trailing blocks grow to
+    // SCREEN_LINE_BLOCK_SIZE instead of accumulating as fragments.
+    const blocks = this.screenLineBlocks
+    let firstBlockIndex = 0
+    let firstBlockStartRow = 0
+    while (firstBlockIndex < blocks.length &&
+           firstBlockStartRow + blocks[firstBlockIndex].rowCount <= startRow) {
+      firstBlockStartRow += blocks[firstBlockIndex].rowCount
+      firstBlockIndex++
+    }
+    if (firstBlockIndex === blocks.length && firstBlockIndex > 0) {
+      firstBlockIndex--
+      firstBlockStartRow -= blocks[firstBlockIndex].rowCount
+    }
+
+    const endRow = startRow + oldRowCount
+    let mergedBlockCount = 0
+    let mergedRowCount = 0
+    while (firstBlockIndex + mergedBlockCount < blocks.length &&
+           (mergedBlockCount === 0 || firstBlockStartRow + mergedRowCount < endRow)) {
+      mergedRowCount += blocks[firstBlockIndex + mergedBlockCount].rowCount
+      mergedBlockCount++
+    }
+
+    // Rebuild the merged region into SCREEN_LINE_BLOCK_SIZE-row blocks,
+    // computing each block's max from the freshly spliced lengths.
+    const replacementBlocks = []
+    const regionEnd = firstBlockStartRow + mergedRowCount - oldRowCount + insertedLengths.length
+    let row = firstBlockStartRow
+    while (row < regionEnd) {
+      const rowCount = Math.min(SCREEN_LINE_BLOCK_SIZE, regionEnd - row)
+      let max = 0
+      for (let i = row, end = row + rowCount; i < end; i++) {
+        if (this.screenLineLengths[i] > max) max = this.screenLineLengths[i]
+      }
+      replacementBlocks.push({rowCount, max})
+      row += rowCount
+    }
+    blocks.splice(firstBlockIndex, mergedBlockCount, ...replacementBlocks)
+  }
+
+  findRightmostScreenPosition () {
+    // Take the first block whose max strictly exceeds the running max, then
+    // the first row inside it with that length — the same position the old
+    // full scan of `screenLineLengths` produced.
+    const blocks = this.screenLineBlocks
+    let maxColumn = 0
+    let maxBlockStartRow = -1
+    let blockStartRow = 0
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i]
+      if (block.max > maxColumn) {
+        maxColumn = block.max
+        maxBlockStartRow = blockStartRow
+      }
+      blockStartRow += block.rowCount
+    }
+    if (maxBlockStartRow < 0) return Point(0, 0)
+    let row = maxBlockStartRow
+    while (this.screenLineLengths[row] < maxColumn) row++
+    return Point(row, maxColumn)
   }
 
   populateSpatialIndexIfNeeded (endBufferRow, endScreenRow, deadline = NullDeadline) {

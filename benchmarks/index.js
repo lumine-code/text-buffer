@@ -2,3 +2,4 @@
 
 require('./construction')
 require('./mutation')
+require('./rightmost')

@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@lumine-code/pathwatcher": "https://github.com/lumine-code/node-pathwatcher.git#ffe5b7b29242c9031e11a0df85f7c0d79f6cc990",
-    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#d68207886ca8819e00e4df42f4d99dd8c5bc568b",
+    "@lumine-code/superstring": "https://github.com/lumine-code/superstring.git#44429ba3bba7a65edcdaee2cf79052d4d8bd6623",
     "diff": "^9.0.0",
     "event-kit": "^2.5.3",
     "fs-admin": "^0.20.0",
@@ -50,5 +50,10 @@
       "atom",
       "snapshotResult"
     ]
+  },
+  "allowScripts": {
+    "github:lumine-code/node-pathwatcher#ffe5b7b29242c9031e11a0df85f7c0d79f6cc990": true,
+    "github:lumine-code/superstring#44429ba3bba7a65edcdaee2cf79052d4d8bd6623": true,
+    "fs-admin@0.20.0": true
   }
 }
