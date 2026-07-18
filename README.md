@@ -2,6 +2,9 @@
 
 Provides Lumine's mutable text buffer and marker model as a headless module.
 
+> [!WARNING]
+> **This package is deprecated.** Its source now lives inside the [Lumine editor](https://github.com/lumine-code/lumine) as part of Lumine core and is no longer maintained as a standalone package. This repository is archived and no longer receives updates.
+
 ## Features
 
 - **Mutable text**: edits, scans, loads, and saves large text documents.
