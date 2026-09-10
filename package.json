@@ -1,7 +1,7 @@
 {
   "name": "@lumine-code/text-buffer",
   "author": "lumine-code",
-  "version": "16.0.0",
+  "version": "1.0.0",
   "description": "Provides Lumine's mutable text buffer and marker model as a headless module.",
   "main": "./src/text-buffer",
   "scripts": {
